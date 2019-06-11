@@ -3,7 +3,7 @@
         "130.00": {
             "cmds" : [
                 {
-                    "throttle": 50
+                    "throttle": 50.0
                 }
             ]
         }
@@ -11,7 +11,7 @@
         "180.00": {
             "cmds" : [
                 {
-                    "throttle": 100
+                    "throttle": 100.0
                 }
             ]
         }
@@ -19,7 +19,7 @@
         "200.00": {
             "cmds" : [
                 {
-                    "throttle": 0
+                    "throttle": 0.0
                 }
             ]
         }

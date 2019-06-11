@@ -28,12 +28,23 @@ class Rocket:
             raise TypeError
         
         self.momentum = Vector(0,0,0)
+        self.axis = Vector(0,1,0)
         
     def __repr__(self):
-        pass
+        return self.__str__()
     
     def __str__(self):
-        pass
+        str = "Rocket Stats: \n\n"
+        str += "Drag Coefficient: {:0.2f}\n".format(self.coeff_drag)
+        str += "Cross Sectional Area: {:0.2f}\n".format(self.cross_sec_area)
+        
+        for stage in self.stages:
+            str += stage.__str__() + "\n\n"
+        
+        for payload in self.payloads:
+            str += payload.__str__() + "\n\n"
+        
+        return str
     
     def add_stage(self, stage):
         if isinstance(stage, Stage):
@@ -47,7 +58,7 @@ class Rocket:
         else:
             raise TypeError
         
-    def get_total_mass():
+    def get_total_mass(self):
         total_mass = 0
         for stage in self.stages:
             total_mass += stage.dry_mass + stage.fuel_mass
@@ -56,14 +67,40 @@ class Rocket:
             total_mass += payload.mass
             
         return total_mass
-            
+    
+    def get_active_stage_thrust(self):
+        stage = self.stages[0]
+        return stage.get_current_thrust()*self.axis
+    
     def separate_active_stage(self):
         ### removes the active stage from the rocket and sets the next stage as the active stage.###
         self.stages.pop(0)
         
     def update_total_mass(self, time_step):
-        self.stages[0].fuel_mass -= fuel_consumption_rate*time_step
+        if isinstance(time_step, float):
+            if time_step > 0.0:
+                stage = self.stages[0]
+                stage.update_mass(time_step)
+            else:
+                raise ValueError
+        else:
+            raise TypeError
         
+    def change_attitude(self, attitude):
+        if isinstance(attitude, Vector):
+            self.axis = attitude
+        else:
+            raise TypeError
+            
+    def adjust_throttle(self, throttle):
+        if isinstance(throttle, float):
+            if throttle >= 0.0 and throttle <= 100.0:
+                stage = self.stages[0]
+                stage.set_current_thrust(throttle)
+            else:
+                raise ValueError
+        else:
+            raise TypeError
         
 class Stage:
     ### 
@@ -81,6 +118,7 @@ class Stage:
         self.max_thrust_mag = options.get('max_thrust_mag') if 'max_thrust_mag' in options else 0.0
         self.max_dmdt = options.get('max_dmdt') if 'max_dmdt' in options else 0.0
         self.throttle = 100 # percentage of stage's mass thrust produced by the engines
+        self.axis = Vector(0,0,0)
         
         # in type check the data
         if isinstance(self.dry_mass, float):
@@ -106,6 +144,36 @@ class Stage:
                 raise ValueError
         else:
             raise TypeError
+            
+    def __repr__(self):
+        return "Stage dry mass is {:0.2f}kg, fuel mass is {:0.2f}kg, max thrust is {:0.2f}N, and max fuel comsumption rate is {:0.2f}kg/s.".format(self.dry_mass, self.fuel_mass, self.max_thrust_mag, self.max_dmdt)
+    
+    def __str__(self):
+        return "Stage dry mass is {:0.2f}kg, fuel mass is {:0.2f}kg, max thrust is {:0.2f}N, and max fuel comsumption rate is {:0.2f}kg/s.".format(self.dry_mass, self.fuel_mass, self.max_thrust_mag, self.max_dmdt)
+    
+    def change_attitude(self, attitude):
+        if isinstance(attitude, Vector):
+            self.axis = attitude
+        else:
+            raise TypeError
+    
+    def set_current_thrust(self, throttle):
+        if isinstance(throttle, float):
+            if throttle > 100.0 or throttle < 0.0:
+                raise ValueError
+            else:
+                self.throttle = throttle
+        else:
+            raise TypeError
+        
+    def get_current_thrust(self):
+        return self.max_thrust_mag*self.throttle/100
+    
+    def get_current_fuel_consumption(self):
+        return self.max_dmdt*self.throttle/100
+    
+    def update_mass(self, time_step):
+        self.fuel_mass -= self.max_dmdt*self.throttle/100*time_step
         
 class Payload:
     ### The payload simply represents a component of a rocket that doesn't contribute to the locomotion. It is simply "dead weight".###
@@ -117,3 +185,9 @@ class Payload:
                 raise ValueError
         else:
             raise TypeError
+            
+    def __repr__(self):
+        return "Payload mass is {:0.2f}kg.".format(self.mass)
+    
+    def __str__(self):
+        return "Payload mass is {:0.2f}kg.".format(self.mass)
