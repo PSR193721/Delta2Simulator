@@ -1,9 +1,19 @@
 [
     {
+        "0.00": {
+            "cmds" : [
+                {
+                    "throttle": 100.0,
+                    "summary": "Ignition of main stage."
+                }
+            ]
+        }
+    }, {
         "130.00": {
             "cmds" : [
                 {
-                    "throttle": 50.0
+                    "throttle": 50.0,
+                    "Summary": "Throttling main stage back to 50%."
                 }
             ]
         }
@@ -11,7 +21,8 @@
         "180.00": {
             "cmds" : [
                 {
-                    "throttle": 100.0
+                    "throttle": 100.0,
+                    "summary": "Main stage to full throttle."
                 }
             ]
         }
@@ -19,7 +30,18 @@
         "200.00": {
             "cmds" : [
                 {
-                    "throttle": 0.0
+                    "throttle": 0.0,
+                    "separate": true,
+                    "summary": "MECO!"
+                }
+            ]
+        }
+    }, {
+        "204.00": {
+            "cmds" : [
+                {
+                    "throttle": 100.0,
+                    "summary": "Ignition of second stage."
                 }
             ]
         }

@@ -69,22 +69,29 @@ class Rocket:
         return total_mass
     
     def get_active_stage_thrust(self):
-        stage = self.stages[0]
-        return stage.get_current_thrust()*self.axis
+        if len(self.stages) > 0:
+            stage = self.stages[0]
+            return stage.get_current_thrust()*self.axis
+        else:
+            return Vector(0,0,0)
     
     def separate_active_stage(self):
         ### removes the active stage from the rocket and sets the next stage as the active stage.###
+        # first, we have to update momentum so that the velocity doesn't suddenly spike
+        velocity = self.momentum/self.get_total_mass()
         self.stages.pop(0)
+        self.momentum = self.get_total_mass()*velocity
         
     def update_total_mass(self, time_step):
-        if isinstance(time_step, float):
-            if time_step > 0.0:
-                stage = self.stages[0]
-                stage.update_mass(time_step)
+        if len(self.stages) > 0:
+            if isinstance(time_step, float):
+                if time_step > 0.0:
+                    stage = self.stages[0]
+                    stage.update_mass(time_step)
+                else:
+                    raise ValueError
             else:
-                raise ValueError
-        else:
-            raise TypeError
+                raise TypeError
         
     def change_attitude(self, attitude):
         if isinstance(attitude, Vector):
@@ -93,14 +100,15 @@ class Rocket:
             raise TypeError
             
     def adjust_throttle(self, throttle):
-        if isinstance(throttle, float):
-            if throttle >= 0.0 and throttle <= 100.0:
-                stage = self.stages[0]
-                stage.set_current_thrust(throttle)
+        if len(self.stages) > 0:
+            if isinstance(throttle, float):
+                if throttle >= 0.0 and throttle <= 100.0:
+                    stage = self.stages[0]
+                    stage.set_current_thrust(throttle)
+                else:
+                    raise ValueError
             else:
-                raise ValueError
-        else:
-            raise TypeError
+                raise TypeError
         
 class Stage:
     ### 
@@ -117,7 +125,7 @@ class Stage:
         self.fuel_mass = options.get('fuel_mass') if 'fuel_mass' in options else 0.0
         self.max_thrust_mag = options.get('max_thrust_mag') if 'max_thrust_mag' in options else 0.0
         self.max_dmdt = options.get('max_dmdt') if 'max_dmdt' in options else 0.0
-        self.throttle = 100 # percentage of stage's mass thrust produced by the engines
+        self.throttle = 0 # percentage of stage's mass thrust produced by the engines
         self.axis = Vector(0,0,0)
         
         # in type check the data
