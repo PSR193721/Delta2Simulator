@@ -4,7 +4,8 @@ class Rocket:
     ### TODO: A rocket is a container class that represents a collection of other objects: stages and a payload ###
     def __init__(self, pos, coeff_drag, cross_sec_area):
         self.stages = [] # a list that represents the stages
-        self.payloads = []
+        self.srbs = [] # a list of solid rocket boosters
+        self.payloads = [] # list of payload objects
         
         if isinstance(coeff_drag, float):
             if coeff_drag > 0.0:
@@ -43,6 +44,8 @@ class Rocket:
         
         for payload in self.payloads:
             str += payload.__str__() + "\n\n"
+        
+        str += "Total mass: {:0.2f} kg".format(self.get_total_mass())
         
         return str
     
@@ -104,7 +107,7 @@ class Rocket:
             if isinstance(throttle, float):
                 if throttle >= 0.0 and throttle <= 100.0:
                     stage = self.stages[0]
-                    stage.set_current_thrust(throttle)
+                    stage.set_throttle(throttle)
                 else:
                     raise ValueError
             else:
@@ -165,7 +168,7 @@ class Stage:
         else:
             raise TypeError
     
-    def set_current_thrust(self, throttle):
+    def set_throttle(self, throttle):
         if isinstance(throttle, float):
             if throttle > 100.0 or throttle < 0.0:
                 raise ValueError
