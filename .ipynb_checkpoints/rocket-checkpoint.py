@@ -37,7 +37,7 @@ class Rocket:
     def __str__(self):
         str = "Rocket Stats: \n\n"
         str += "Drag Coefficient: {:0.2f}\n".format(self.coeff_drag)
-        str += "Cross Sectional Area: {:0.2f}\n".format(self.cross_sec_area)
+        str += "Cross Sectional Area: {:0.2f} m^2\n".format(self.cross_sec_area)
         
         for stage in self.stages:
             str += stage.__str__() + "\n\n"
@@ -60,9 +60,19 @@ class Rocket:
             self.payloads.append(payload)
         else:
             raise TypeError
+            
+    def add_srb(self, srb):
+        if isinstance(srb, Stage):
+            self.srbs.append(srb)
+        else:
+            raise TypeError
         
     def get_total_mass(self):
         total_mass = 0
+        
+        for srb in self.srbs:
+            total_mass += srb.dry_mass + srb.fuel_mass
+            
         for stage in self.stages:
             total_mass += stage.dry_mass + stage.fuel_mass
             
@@ -77,6 +87,18 @@ class Rocket:
             return stage.get_current_thrust()*self.axis
         else:
             return Vector(0,0,0)
+        
+    def get_srb_thrust(self):
+        if len(self.srbs) > 0:
+            total_thrust_mag = 0
+            for srb in self.srbs:
+                total_thrust_mag += srb.get_current_thrust()
+            return total_thrust_mag*self.axis
+        else:
+            return Vector(0,0,0)
+        
+    def get_total_thrust(self):
+        return self.get_active_stage_thrust() + self.get_srb_thrust()
     
     def separate_active_stage(self):
         ### removes the active stage from the rocket and sets the next stage as the active stage.###
@@ -85,16 +107,27 @@ class Rocket:
         self.stages.pop(0)
         self.momentum = self.get_total_mass()*velocity
         
+    def separate_srbs(self):
+        ### currently, only support a single "stage" of SRBs. All SRBs fire on main ignition and are jettisoned at the same time. ### 
+        velocity = self.momentum/self.get_total_mass()
+        self.srbs = []
+        self.momentum = self.get_total_mass()*velocity
+        
     def update_total_mass(self, time_step):
-        if len(self.stages) > 0:
-            if isinstance(time_step, float):
-                if time_step > 0.0:
+        if isinstance(time_step, float):
+            if time_step > 0.0:
+                if len(self.stages) > 0:
                     stage = self.stages[0]
                     stage.update_mass(time_step)
-                else:
-                    raise ValueError
+
+                if len(self.srbs) > 0:
+                    for srb in self.srbs:
+                        srb.update_mass(time_step)
             else:
-                raise TypeError
+                raise ValueError
+        else:
+            raise TypeError
+            
         
     def change_attitude(self, attitude):
         if isinstance(attitude, Vector):
@@ -112,6 +145,11 @@ class Rocket:
                     raise ValueError
             else:
                 raise TypeError
+                
+    def ignite_srbs(self):
+        if len(self.srbs) > 0:
+            for srb in self.srbs:
+                srb.set_throttle(100.0)
         
 class Stage:
     ### 
@@ -121,6 +159,7 @@ class Stage:
     ###    fuel_mass - float - the mass of the fuel + oxidizer carried by the stage
     ###    max_thrust_mag - float - the maximum thrust in newtons.
     ###    max_dmdt - float - the maximum rate at which fuel + oxidizer is consumed in kilograms per second
+    ###    length - float - the length of the stage in meters
     ### }
     ###
     def __init__(self, options):
@@ -129,6 +168,7 @@ class Stage:
         self.max_thrust_mag = options.get('max_thrust_mag') if 'max_thrust_mag' in options else 0.0
         self.max_dmdt = options.get('max_dmdt') if 'max_dmdt' in options else 0.0
         self.throttle = 0 # percentage of stage's mass thrust produced by the engines
+        self.length = options.get('length') if 'length' in options else 0.0
         self.axis = Vector(0,0,0)
         
         # in type check the data
@@ -188,7 +228,7 @@ class Stage:
         
 class Payload:
     ### The payload simply represents a component of a rocket that doesn't contribute to the locomotion. It is simply "dead weight".###
-    def __init__(self, mass):
+    def __init__(self, mass, length):
         if isinstance(mass, float):
             if mass > 0.0:
                 self.mass = mass
@@ -202,3 +242,11 @@ class Payload:
     
     def __str__(self):
         return "Payload mass is {:0.2f}kg.".format(self.mass)
+    
+
+class Error(Exception):
+   """Base class for other exceptions"""
+   pass    
+    
+class NoFlightPlanError(Error):
+    pass

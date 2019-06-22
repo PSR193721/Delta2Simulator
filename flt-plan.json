@@ -4,7 +4,17 @@
             "cmds" : [
                 {
                     "throttle": 100.0,
+                    "ignite_srbs": true,
                     "summary": "Ignition of main stage."
+                }
+            ]
+        }
+    },{
+        "63.30": {
+            "cmds" : [
+                {
+                    "separate_srbs": true,
+                    "summary": "SRB separtation."
                 }
             ]
         }
@@ -13,13 +23,21 @@
             "cmds" : [
                 {
                     "throttle": 0.0,
-                    "separate": true,
-                    "summary": "MECO!"
+                    "summary": "MECO-1"
                 }
             ]
         }
     }, {
-        "263.00": {
+        "270.00": {
+            "cmds" : [
+                {
+                    "separate": true,
+                    "summary": "Stage Separation"
+                }
+            ]
+        }
+    }, {
+        "276.00": {
             "cmds" : [
                 {
                     "throttle": 100.0,
@@ -33,12 +51,12 @@
                 {
                     "throttle": 0.0,
                     "separate": true,
-                    "summary": "Second stage cut-off."
+                    "summary": "SECO-1"
                 }
             ]
         }
     }, {
-        "700.00": {
+        "900.00": {
             "cmds" : [
                 {
                     "EOM": true,
