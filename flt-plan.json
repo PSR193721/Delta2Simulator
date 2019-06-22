@@ -1,25 +1,66 @@
 [
     {
-        "130.00": {
+        "0.00": {
             "cmds" : [
                 {
-                    "throttle": 50
+                    "throttle": 100.0,
+                    "ignite_srbs": true,
+                    "summary": "Ignition of main stage."
+                }
+            ]
+        }
+    },{
+        "63.30": {
+            "cmds" : [
+                {
+                    "separate_srbs": true,
+                    "summary": "SRB separtation."
                 }
             ]
         }
     }, {
-        "180.00": {
+        "260.00": {
             "cmds" : [
                 {
-                    "throttle": 100
+                    "throttle": 0.0,
+                    "summary": "MECO-1"
                 }
             ]
         }
     }, {
-        "200.00": {
+        "270.00": {
             "cmds" : [
                 {
-                    "throttle": 0
+                    "separate": true,
+                    "summary": "Stage Separation"
+                }
+            ]
+        }
+    }, {
+        "276.00": {
+            "cmds" : [
+                {
+                    "throttle": 100.0,
+                    "summary": "Ignition of second stage."
+                }
+            ]
+        }
+    }, {
+        "694.00": {
+            "cmds" : [
+                {
+                    "throttle": 0.0,
+                    "separate": true,
+                    "summary": "SECO-1"
+                }
+            ]
+        }
+    }, {
+        "900.00": {
+            "cmds" : [
+                {
+                    "EOM": true,
+                    "summary": "End of mission."
                 }
             ]
         }
