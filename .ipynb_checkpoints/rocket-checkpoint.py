@@ -45,7 +45,7 @@ class Rocket:
         for payload in self.payloads:
             str += payload.__str__() + "\n\n"
         
-        str += "Total mass: {:0.2f} kg".format(self.get_total_mass())
+        str += "Total mass: {:0.2f} kg".format(self.total_mass)
         
         return str
     
@@ -66,8 +66,9 @@ class Rocket:
             self.srbs.append(srb)
         else:
             raise TypeError
-        
-    def get_total_mass(self):
+    
+    @property
+    def total_mass(self):
         total_mass = 0
         
         for srb in self.srbs:
@@ -81,38 +82,28 @@ class Rocket:
             
         return total_mass
     
-    def get_active_stage_thrust(self):
+    @property
+    def active_stage_thrust(self):
         if len(self.stages) > 0:
             stage = self.stages[0]
-            return stage.get_current_thrust()*self.axis
+            return stage.current_thrust*self.axis
         else:
             return Vector(0,0,0)
-        
-    def get_srb_thrust(self):
+    
+    @property
+    def srb_thrust(self):
         if len(self.srbs) > 0:
             total_thrust_mag = 0
             for srb in self.srbs:
-                total_thrust_mag += srb.get_current_thrust()
+                total_thrust_mag += srb.current_thrust
             return total_thrust_mag*self.axis
         else:
             return Vector(0,0,0)
-        
-    def get_total_thrust(self):
-        return self.get_active_stage_thrust() + self.get_srb_thrust()
     
-    def separate_active_stage(self):
-        ### removes the active stage from the rocket and sets the next stage as the active stage.###
-        # first, we have to update momentum so that the velocity doesn't suddenly spike
-        velocity = self.momentum/self.get_total_mass()
-        self.stages.pop(0)
-        self.momentum = self.get_total_mass()*velocity
-        
-    def separate_srbs(self):
-        ### currently, only support a single "stage" of SRBs. All SRBs fire on main ignition and are jettisoned at the same time. ### 
-        velocity = self.momentum/self.get_total_mass()
-        self.srbs = []
-        self.momentum = self.get_total_mass()*velocity
-        
+    @property    
+    def total_thrust(self):
+        return self.active_stage_thrust + self.srb_thrust
+    
     def update_total_mass(self, time_step):
         if isinstance(time_step, float):
             if time_step > 0.0:
@@ -127,9 +118,26 @@ class Rocket:
                 raise ValueError
         else:
             raise TypeError
-            
+    
+    def separate_active_stage(self):
+        ### removes the active stage from the rocket and sets the next stage as the active stage.###
+        # first, we have to update momentum so that the velocity doesn't suddenly spike
+        velocity = self.momentum/self.total_mass
+        self.stages.pop(0)
+        self.momentum = self.total_mass*velocity
         
-    def change_attitude(self, attitude):
+    def separate_srbs(self):
+        ### currently, only support a single "stage" of SRBs. All SRBs fire on main ignition and are jettisoned at the same time. ### 
+        velocity = self.momentum/self.total_mass
+        self.srbs = []
+        self.momentum = self.total_mass*velocity
+    
+    @property
+    def attitude(self):
+        return self.axis
+    
+    @attitude.setter
+    def attitude(self, attitude):
         if isinstance(attitude, Vector):
             self.axis = attitude
         else:
@@ -202,7 +210,12 @@ class Stage:
     def __str__(self):
         return "Stage dry mass is {:0.2f}kg, fuel mass is {:0.2f}kg, max thrust is {:0.2f}N, and max fuel comsumption rate is {:0.2f}kg/s.".format(self.dry_mass, self.fuel_mass, self.max_thrust_mag, self.max_dmdt)
     
-    def change_attitude(self, attitude):
+    @property
+    def attitude(self):
+        return self.axis
+    
+    @attitude.setter
+    def attitude(self, attitude):
         if isinstance(attitude, Vector):
             self.axis = attitude
         else:
@@ -216,11 +229,13 @@ class Stage:
                 self.throttle = throttle
         else:
             raise TypeError
-        
-    def get_current_thrust(self):
+            
+    @property    
+    def current_thrust(self):
         return self.max_thrust_mag*self.throttle/100
     
-    def get_current_fuel_consumption(self):
+    @property
+    def current_fuel_consumption(self):
         return self.max_dmdt*self.throttle/100
     
     def update_mass(self, time_step):
