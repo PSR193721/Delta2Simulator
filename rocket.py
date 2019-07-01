@@ -1,4 +1,5 @@
 from vector import Vector
+import numpy as np
 
 class Rocket:
     ### TODO: A rocket is a container class that represents a collection of other objects: stages and a payload ###
@@ -30,6 +31,7 @@ class Rocket:
         
         self.momentum = Vector(0,0,0)
         self.axis = Vector(0,1,0)
+        self.roll_rate = 0
         
     def __repr__(self):
         return self.__str__()
@@ -134,12 +136,20 @@ class Rocket:
     
     @property
     def attitude(self):
-        return self.axis
+        return np.arccos(self.axis.dot(Vector(0,1,0)))
     
-    @attitude.setter
-    def attitude(self, attitude):
-        if isinstance(attitude, Vector):
-            self.axis = attitude
+    def set_attitude(self, time_step):
+        # compute the angle between the launch vehicle's axis and the vertical axis.
+        theta = self.attitude
+        # update the angle
+        theta += self.roll_rate*time_step
+        # now change the angle of the launch vehicle's axis.
+        self.axis = (Vector(np.sin(theta), np.cos(theta), 0)).hat()
+        
+            
+    def set_roll_rate(self, roll_rate):
+        if isinstance(roll_rate, float):
+            self.roll_rate = roll_rate
         else:
             raise TypeError
             
